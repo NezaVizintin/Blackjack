@@ -161,10 +161,14 @@ def stand():
 
 # draw handler    
 def draw(canvas):
-    dealer_hand.draw(canvas, [CARD_SIZE[0], CARD_SIZE[1] * 1,5])
-    player_hand.draw(canvas, [CARD_SIZE[0], CARD_SIZE[1] * 3,5])
+    dealer_hand.draw(canvas, [CARD_SIZE[0] * 0.5, CARD_SIZE[1]])
+    player_hand.draw(canvas, [CARD_SIZE[0] * 0.5, CARD_SIZE[1] * 2.5])
     canvas.draw_text('BLACKJACK', (200, 60), 40, 'Black')
     canvas.draw_text(active_text, (200, 450), 30, 'Black')
+    
+    if in_play:
+        canvas.draw_image(card_back, (CARD_SIZE[0]/2, CARD_SIZE[1]/2), (CARD_SIZE[0], CARD_SIZE[1]), [CARD_SIZE[0] * 2.06, CARD_SIZE[1] * 1.5], (CARD_SIZE[0], CARD_SIZE[1]))
+
     
     if not last_card == "":
         last_card.draw(canvas, [CARD_SIZE[0], CARD_SIZE[1] * 4,5])
