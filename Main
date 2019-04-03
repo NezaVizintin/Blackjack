@@ -15,10 +15,12 @@ card_back = simplegui.load_image("http://storage.googleapis.com/codeskulptor-ass
 # initialize some useful global variables
 in_play = False
 outcome = ""
-score = 0
+score = {"wins": 0, "loses": 0}
 dealer_hand = ""
 player_hand = ""
 deck = ""
+last_card = ""
+active_text = ""
 
 # define globals for cards
 SUITS = ('C', 'S', 'H', 'D')
@@ -64,7 +66,7 @@ class Hand:
         s = ""
         for card in self.hand:
             s += str(card) + " "
-        return "Hand contains: " + s
+        return s
 
     def add_card(self, card):
         self.hand.append(card)
@@ -81,8 +83,9 @@ class Hand:
         return value   
 
     def draw(self, canvas, pos):
-        pass	# draw a hand on the canvas, use the draw method for cards
-
+        for card in self.hand:
+            pos = [pos[0] + 5 + CARD_SIZE[0], pos[1]]
+            card.draw(canvas, pos)
         
 # define deck class 
 class Deck:
@@ -108,65 +111,73 @@ class Deck:
 
 #define event handlers for buttons
 def deal():
-    global outcome, in_play, deck, dealer_hand, player_hand
+    global outcome, in_play, deck, dealer_hand, player_hand, last_card, active_text
+    if in_play:
+        active_text = "Sorry, you loose :("
+        score["loses"] += 1
+    
     dealer_hand = Hand()
     player_hand = Hand()
     deck = Deck()
+    last_card = ""
     
     deck.shuffle()
     deal_cards(player_hand, 2)
     deal_cards(dealer_hand, 2)
-    print "PLAYER: " + str(player_hand)
-    print "DEALER: " + str(dealer_hand)
     
     in_play = True
 
 def hit():
-    global in_play
-    card = deck.deal_card()
-    if player_hand.get_value() + VALUES[card.get_rank()] <= 21:
-        player_hand.add_card(card)
-        
-        print "PLAYER: " + str(player_hand)
-        print player_hand.get_value()
+    global in_play, last_card, active_text, score
+    if in_play:
+        card = deck.deal_card()
+        if player_hand.get_value() + VALUES[card.get_rank()] <= 21:
+            player_hand.add_card(card)
+
+        else:
+            last_card = card
+            in_play = False
+            active_text = "BUSTED! Sorry, you loose :("
+            score["loses"] += 1
     else:
-        print str(card) + " Busted!"
-        in_play = False
-    
-    # if the hand is in play, hit the player
-   
-    # if busted, assign a message to outcome, update in_play and score
+        active_text = "Press DEAL to play another game"
        
 def stand():
-    global in_play
-    if not in_play:
-        print "Told you, you have busted!"
-    else:
+    global in_play, active_text, score
+    if in_play:
         while dealer_hand.get_value() < 17:
             deal_cards(dealer_hand, 1)
         if dealer_hand.get_value() > 21:
             in_play = False
-            print "You win!"
+            active_text = "Busted! You win!"
+            score["wins"] += 1
+    else:
+        active_text = "Press DEAL to play another game"
     
     if in_play:
         if player_hand.get_value() > dealer_hand.get_value():
-            print "You win!"
+            active_text = "YAY! You win!"
+            score["wins"] += 1
+            in_play = False
         else:
-            print "You lose!"
-    
-    print "DEALER: " + str(dealer_hand)
-    print dealer_hand.get_value()
-    
-
-    # assign a message to outcome, update in_play and score
+            active_text = "Sorry, you loose :("
+            score["loses"] += 1
+            in_play = False    
 
 # draw handler    
 def draw(canvas):
-    # test to make sure that card.draw works, replace with your code below
+    dealer_hand.draw(canvas, [CARD_SIZE[0] * 0.5, CARD_SIZE[1]])
+    player_hand.draw(canvas, [CARD_SIZE[0] * 0.5, CARD_SIZE[1] * 2.5])
+    canvas.draw_text('BLACKJACK', (200, 60), 40, 'Black')
+    canvas.draw_text(active_text, (200, 450), 30, 'Black')
+    canvas.draw_text("Score: "  + str(score["wins"]) + "/" + str(score["loses"]), (200, 500), 30, 'Black')
     
-    card = Card("S", "A")
-    card.draw(canvas, [300, 300])
+    if in_play:
+        canvas.draw_image(card_back, (CARD_SIZE[0]/2, CARD_SIZE[1]/2), (CARD_SIZE[0], CARD_SIZE[1]), [CARD_SIZE[0] * 2.06, CARD_SIZE[1] * 1.5], (CARD_SIZE[0], CARD_SIZE[1]))
 
+    
+    if not last_card == "":
+        last_card.draw(canvas, [CARD_SIZE[0], CARD_SIZE[1] * 4,5])
 
 # initialization frame
 frame = simplegui.create_frame("Blackjack", 600, 600)
