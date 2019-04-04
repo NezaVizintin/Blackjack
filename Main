@@ -177,7 +177,7 @@ def draw(canvas):
     if dealer_hand.get_value() <= 21:
         value_colour_dealer = "Green"
     else:
-        value_colour_dealyer = "Red"
+        value_colour_dealer = "Red"
     
     dealer_hand.draw(canvas, [CARD_SIZE[0] * 0.5, CARD_SIZE[1]])
     player_hand.draw(canvas, [CARD_SIZE[0] * 0.5, CARD_SIZE[1] * 2.5])
@@ -208,6 +208,3 @@ frame.set_draw_handler(draw)
 # get things rolling
 deal()
 frame.start()
-
-
-# remember to review the gradic rubric
