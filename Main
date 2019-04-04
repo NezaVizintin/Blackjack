@@ -21,6 +21,8 @@ player_hand = ""
 deck = ""
 last_card = ""
 active_text = ""
+value_colour_dealer = ""
+value_colour_player = ""
 
 # define globals for cards
 SUITS = ('C', 'S', 'H', 'D')
@@ -78,7 +80,8 @@ class Hand:
             value += VALUES[card.get_rank()]
             if card.get_rank() == "A":
                 aces = True
-        if value + 10 <= 21 and aces:
+         
+        if aces and value + 10 <= 21:
             value += 10
         return value   
 
@@ -112,15 +115,16 @@ class Deck:
 #define event handlers for buttons
 def deal():
     global outcome, in_play, deck, dealer_hand, player_hand, last_card, active_text
-    if in_play:
-        active_text = "Sorry, you loose :("
-        score["loses"] += 1
-    
+    active_text = "Hit or stand?"    
     dealer_hand = Hand()
     player_hand = Hand()
     deck = Deck()
     last_card = ""
     
+    if in_play:
+        score["loses"] += 1
+        active_text = "You lose!"
+        
     deck.shuffle()
     deal_cards(player_hand, 2)
     deal_cards(dealer_hand, 2)
@@ -128,31 +132,30 @@ def deal():
     in_play = True
 
 def hit():
-    global in_play, last_card, active_text, score
+    global in_play, active_text, score
+    active_text = "Hit or stand?"
     if in_play:
         card = deck.deal_card()
-        if player_hand.get_value() + VALUES[card.get_rank()] <= 21:
-            player_hand.add_card(card)
-
-        else:
-            last_card = card
+        player_hand.add_card(card)
+        if player_hand.get_value() > 21:
             in_play = False
             active_text = "BUSTED! Sorry, you loose :("
             score["loses"] += 1
     else:
-        active_text = "Press DEAL to play another game"
+        active_text = "Press DEAL for another game"
        
 def stand():
     global in_play, active_text, score
+    active_text = "Hit or stand?"
     if in_play:
         while dealer_hand.get_value() < 17:
             deal_cards(dealer_hand, 1)
         if dealer_hand.get_value() > 21:
             in_play = False
-            active_text = "Busted! You win!"
+            active_text = "Dealer busted! You win!"
             score["wins"] += 1
     else:
-        active_text = "Press DEAL to play another game"
+        active_text = "Press DEAL for another game"
     
     if in_play:
         if player_hand.get_value() > dealer_hand.get_value():
@@ -166,18 +169,30 @@ def stand():
 
 # draw handler    
 def draw(canvas):
+    if player_hand.get_value() <= 21:
+        value_colour_player = "Green"
+    else:
+        value_colour_player = "Red"
+        
+    if dealer_hand.get_value() <= 21:
+        value_colour_dealer = "Green"
+    else:
+        value_colour_dealyer = "Red"
+    
     dealer_hand.draw(canvas, [CARD_SIZE[0] * 0.5, CARD_SIZE[1]])
     player_hand.draw(canvas, [CARD_SIZE[0] * 0.5, CARD_SIZE[1] * 2.5])
     canvas.draw_text('BLACKJACK', (200, 60), 40, 'Black')
     canvas.draw_text(active_text, (200, 450), 30, 'Black')
     canvas.draw_text("Score: "  + str(score["wins"]) + "/" + str(score["loses"]), (200, 500), 30, 'Black')
+    canvas.draw_circle((51, CARD_SIZE[1] * 3 - 7), 15, 12, 'White', 'White')
+    canvas.draw_text(str(player_hand.get_value()), (40, CARD_SIZE[1] * 3), 22, value_colour_player)
+    
+    if not in_play:
+        canvas.draw_circle((51, CARD_SIZE[1] * 1.5 - 7), 15, 12, 'White', 'White')
+        canvas.draw_text(str(dealer_hand.get_value()), (40, CARD_SIZE[1] * 1.5), 22, value_colour_dealer)
     
     if in_play:
         canvas.draw_image(card_back, (CARD_SIZE[0]/2, CARD_SIZE[1]/2), (CARD_SIZE[0], CARD_SIZE[1]), [CARD_SIZE[0] * 2.06, CARD_SIZE[1] * 1.5], (CARD_SIZE[0], CARD_SIZE[1]))
-
-    
-    if not last_card == "":
-        last_card.draw(canvas, [CARD_SIZE[0], CARD_SIZE[1] * 4,5])
 
 # initialization frame
 frame = simplegui.create_frame("Blackjack", 600, 600)
